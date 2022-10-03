@@ -13,16 +13,30 @@ public class NetworkedServer : MonoBehaviour
     int unreliableChannelID;
     int hostID;
     int socketPort = 5491;
+    public List<string> savedAccounts;
+    string savedAccountsFilePath = "savedAccounts.txt";
 
     // Start is called before the first frame update
     void Start()
     {
+       
         NetworkTransport.Init();
         ConnectionConfig config = new ConnectionConfig();
         reliableChannelID = config.AddChannel(QosType.Reliable);
         unreliableChannelID = config.AddChannel(QosType.Unreliable);
         HostTopology topology = new HostTopology(config, maxConnections);
         hostID = NetworkTransport.AddHost(topology, socketPort, null);
+
+        var sr = new StreamReader(savedAccountsFilePath);
+        string line = "";
+        while ((line = sr.ReadLine()) != null)
+        {
+            savedAccounts.Add(line);
+        }
+        sr.Close();
+
+
+
 
     }
 
@@ -67,7 +81,62 @@ public class NetworkedServer : MonoBehaviour
 
     private void ProcessRecievedMsg(string msg, int id)
     {
-        Debug.Log("msg recieved = " + msg + ".  connection id = " + id);
+        string[] splitter = msg.Split(',', System.StringSplitOptions.RemoveEmptyEntries);
+        if(int.Parse(splitter[0]) == 0)
+        {
+            //Log In
+            foreach (string account in savedAccounts)
+            {
+                string[] splitter2 = account.Split(',', System.StringSplitOptions.RemoveEmptyEntries);
+                if (splitter2[0] == splitter[1])
+                {
+                    Debug.Log("Login found");
+
+
+                    if (splitter2[1] == splitter[2])
+                    {
+                        Debug.Log("Access opened");
+                        //here send back message that access achieved
+
+                    }
+                    else
+                        Debug.Log("The password is incorrect, access denied");
+                }
+
+            }
+        }
+        else if(int.Parse(splitter[0]) == 1)
+        {
+            //Registration
+            bool accountAlreadyExists = false;
+
+            foreach(string account in savedAccounts)
+            {
+                string[] splitter2 = account.Split(',', System.StringSplitOptions.RemoveEmptyEntries);
+                if (splitter2[0] == splitter[1])
+                    accountAlreadyExists = true;
+            }
+            if(!accountAlreadyExists)
+            {
+                //Here we need to create saving of the new account
+                string newAcc = splitter[1] + ',' + splitter[2];
+                savedAccounts.Add(newAcc);
+                File.Delete(savedAccountsFilePath);
+                var sw = new StreamWriter(savedAccountsFilePath);
+                foreach(string account in savedAccounts)
+                {
+                    sw.WriteLine(account);
+                }
+
+                sw.Close();
+                Debug.Log("new account added");
+                //here send back message that access achieved
+
+            }
+        }
+       
+
+       // Debug.Log("msg recieved = " + msg + ".  connection id = " + id);
     }
 
 }
