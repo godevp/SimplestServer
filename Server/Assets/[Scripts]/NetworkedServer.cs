@@ -81,28 +81,36 @@ public class NetworkedServer : MonoBehaviour
 
     private void ProcessRecievedMsg(string msg, int id)
     {
+        Debug.Log(msg);
         string[] splitter = msg.Split(',', System.StringSplitOptions.RemoveEmptyEntries);
         if(int.Parse(splitter[0]) == 0)
         {
+            bool loginFound = false;
             //Log In
             foreach (string account in savedAccounts)
             {
                 string[] splitter2 = account.Split(',', System.StringSplitOptions.RemoveEmptyEntries);
-                if (splitter2[0] == splitter[1])
+                
+                if(splitter2[0] == splitter[1])
                 {
                     Debug.Log("Login found");
-
-
-                    if (splitter2[1] == splitter[2])
+                    loginFound = true;
+                    if(splitter2[1] == splitter[2])
                     {
                         Debug.Log("Access opened");
-                        //here send back message that access achieved
-
+                        SendMessageToClient("LoginApproved", id);
                     }
                     else
-                        Debug.Log("The password is incorrect, access denied");
+                    {
+                        Debug.Log("Bad password");
+                        SendMessageToClient("LoginDenied", id);
+                    }
                 }
-
+            }
+            if(!loginFound)
+            {
+                Debug.Log("Login not found");
+                SendMessageToClient("LoginDenied", id);
             }
         }
         else if(int.Parse(splitter[0]) == 1)
