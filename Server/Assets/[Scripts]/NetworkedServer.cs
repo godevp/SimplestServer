@@ -137,13 +137,14 @@ public class NetworkedServer : MonoBehaviour
                     sw.Close();
                     Debug.Log("new account added");
                     //here send back message that access achieved
+                    SendMessageToClient("LoginApproved", id);
 
                 }
                 break;
 
             case 2:
                 var newRoom = Instantiate(prefabRoom,GridForRooms.transform);
-                //RectTransform theRect = newRoom.GetComponent<RectTransform>();
+               // var roomName = newRoom.GetComponent<Te>
                
 
                 break;
