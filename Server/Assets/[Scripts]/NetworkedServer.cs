@@ -16,6 +16,7 @@ public class NetworkedServer : MonoBehaviour
     int hostID;
     int socketPort = 5491;
     public List<string> savedAccounts;
+    public List<string> RoomNames;
     string savedAccountsFilePath = "savedAccounts.txt";
     [SerializeField] private GameObject prefabRoom;
     [SerializeField] private GameObject GridForRooms;
@@ -144,10 +145,13 @@ public class NetworkedServer : MonoBehaviour
                 break;
 
             case 2:
-                var newRoom = Instantiate(prefabRoom,GridForRooms.transform);
-                var roomName = newRoom.GetComponentInChildren<TMP_Text>().text = splitter[1];
-
-
+                if (!RoomNames.Contains(splitter[1]))
+                {
+                    var newRoom = Instantiate(prefabRoom, GridForRooms.transform);
+                    var roomName = newRoom.GetComponentInChildren<TMP_Text>().text = splitter[1];
+                    RoomNames.Add(roomName);
+                }
+                //here send message back to client which will lead to connection to this room. The Client should change state.
                 break;
 
             default:
