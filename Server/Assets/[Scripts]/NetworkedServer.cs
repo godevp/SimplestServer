@@ -6,6 +6,7 @@ using UnityEngine.Networking;
 using System.IO;
 using UnityEngine.UI;
 using Unity.VisualScripting;
+using TMPro;
 
 public class NetworkedServer : MonoBehaviour
 {
@@ -144,8 +145,8 @@ public class NetworkedServer : MonoBehaviour
 
             case 2:
                 var newRoom = Instantiate(prefabRoom,GridForRooms.transform);
-               // var roomName = newRoom.GetComponent<Te>
-               
+                var roomName = newRoom.GetComponentInChildren<TMP_Text>().text = splitter[1];
+
 
                 break;
 
