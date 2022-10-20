@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.Networking;
 using System.IO;
 using UnityEngine.UI;
+using Unity.VisualScripting;
 
 public class NetworkedServer : MonoBehaviour
 {
@@ -15,6 +16,9 @@ public class NetworkedServer : MonoBehaviour
     int socketPort = 5491;
     public List<string> savedAccounts;
     string savedAccountsFilePath = "savedAccounts.txt";
+    [SerializeField] private GameObject prefabRoom;
+    [SerializeField] private GameObject GridForRooms;
+
 
     // Start is called before the first frame update
     void Start()
@@ -83,68 +87,70 @@ public class NetworkedServer : MonoBehaviour
     {
         Debug.Log(msg);
         string[] splitter = msg.Split(',', System.StringSplitOptions.RemoveEmptyEntries);
-        if(int.Parse(splitter[0]) == 0)
+        switch (int.Parse(splitter[0]))//check the indetifier of the message
         {
-            bool loginFound = false;
-            //Log In
-            foreach (string account in savedAccounts)
-            {
-                string[] splitter2 = account.Split(',', System.StringSplitOptions.RemoveEmptyEntries);
-                
-                if(splitter2[0] == splitter[1])
+            case 0: //Log In
+                bool loginFound = false;
+                foreach (string account in savedAccounts)
                 {
-                    Debug.Log("Login found");
-                    loginFound = true;
-                    if(splitter2[1] == splitter[2])
+                    string[] splitter2 = account.Split(',', System.StringSplitOptions.RemoveEmptyEntries);
+
+                    if (splitter2[0] == splitter[1])
                     {
-                        Debug.Log("Access opened");
-                        SendMessageToClient("LoginApproved", id);
-                    }
-                    else
-                    {
-                        Debug.Log("Bad password");
-                        SendMessageToClient("LoginDenied", id);
+                        Debug.Log("Login found");
+                        loginFound = true;
+                        if (splitter2[1] == splitter[2])
+                            SendMessageToClient("LoginApproved", id);
+                        else
+                            SendMessageToClient("LoginDenied", id);
+
                     }
                 }
-            }
-            if(!loginFound)
-            {
-                Debug.Log("Login not found");
-                SendMessageToClient("LoginDenied", id);
-            }
-        }
-        else if(int.Parse(splitter[0]) == 1)
-        {
-            //Registration
-            bool accountAlreadyExists = false;
-
-            foreach(string account in savedAccounts)
-            {
-                string[] splitter2 = account.Split(',', System.StringSplitOptions.RemoveEmptyEntries);
-                if (splitter2[0] == splitter[1])
-                    accountAlreadyExists = true;
-            }
-            if(!accountAlreadyExists)
-            {
-                //Here we need to create saving of the new account
-                string newAcc = splitter[1] + ',' + splitter[2];
-                savedAccounts.Add(newAcc);
-                File.Delete(savedAccountsFilePath);
-                var sw = new StreamWriter(savedAccountsFilePath);
-                foreach(string account in savedAccounts)
+                if (!loginFound)
                 {
-                    sw.WriteLine(account);
+                    Debug.Log("Login not found");
+                    SendMessageToClient("LoginDenied", id);
                 }
+                break;
+            case 1: //Registration
 
-                sw.Close();
-                Debug.Log("new account added");
-                //here send back message that access achieved
+                bool accountAlreadyExists = false;
 
-            }
+                foreach (string account in savedAccounts)
+                {
+                    string[] splitter2 = account.Split(',', System.StringSplitOptions.RemoveEmptyEntries);
+                    if (splitter2[0] == splitter[1])
+                        accountAlreadyExists = true;
+                }
+                if (!accountAlreadyExists)
+                {
+                    //Here we need to create saving of the new account
+                    string newAcc = splitter[1] + ',' + splitter[2];
+                    savedAccounts.Add(newAcc);
+                    File.Delete(savedAccountsFilePath);
+                    var sw = new StreamWriter(savedAccountsFilePath);
+                    foreach (string account in savedAccounts)
+                    {
+                        sw.WriteLine(account);
+                    }
+
+                    sw.Close();
+                    Debug.Log("new account added");
+                    //here send back message that access achieved
+
+                }
+                break;
+
+            case 2:
+                var newRoom = Instantiate(prefabRoom,GridForRooms.transform);
+                //RectTransform theRect = newRoom.GetComponent<RectTransform>();
+               
+
+                break;
+
+            default:
+                break;
         }
-       
-
-       // Debug.Log("msg recieved = " + msg + ".  connection id = " + id);
     }
 
 }
