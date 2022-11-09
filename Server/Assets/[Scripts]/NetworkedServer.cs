@@ -24,6 +24,9 @@ public class NetworkedServer : MonoBehaviour
 
     //indetifires
     private const int newPlayer = 1;
+    private const int turn1 = 111;
+    private const int turn2 = 222;
+    private const int yourTurn = 333;
 
     // Start is called before the first frame update
     void Start()
@@ -162,6 +165,20 @@ public class NetworkedServer : MonoBehaviour
                             Debug.Log(RoomNames[i]);
                             //send msg where we tell to join the stage with the game
                             SendMessageToClient("SecondPlayer", id);
+                            var z = Random.Range(1, 2);
+                            if(z == 1)
+                            {
+
+                                SendMessageToClient(turn1.ToString(), id);
+                                SendMessageToClient(turn2.ToString(), int.Parse(dividerForRoom[1]));
+                            }
+                            else if(z == 2)
+                            {
+                                SendMessageToClient(turn2.ToString(), id);
+                                SendMessageToClient(turn1.ToString(), int.Parse(dividerForRoom[1]));
+                            }
+                            
+                            
                             break;
                         }
                         if (dividerForRoom[0] == splitter[1] && dividerForRoom.Length >= 3)
@@ -179,11 +196,44 @@ public class NetworkedServer : MonoBehaviour
                         RoomNames.Add(splitter[1] + ',' + id.ToString());
                         SendMessageToClient("FirstPlayer", id);
                     }
-
+                    
 
                     //here send message back to client which will lead to connection to this room. The Client should change state.
                     break;
+                case 777:
+                    for (int i = 0; i < RoomNames.Count; i++)
+                    {
+                        string[] dividerForRoom = RoomNames[i].Split(',', System.StringSplitOptions.RemoveEmptyEntries);
+                        if(int.Parse(dividerForRoom[1]) == id )
+                        {
+                            SendMessageToClient("Loser", int.Parse(dividerForRoom[2]));
+                        }
+                        else if (int.Parse(dividerForRoom[2]) == id)
+                        {
+                            SendMessageToClient("Loser", int.Parse(dividerForRoom[1]));
+                        }
+                    }
 
+
+                        break;
+
+                case 1111:
+                    for (int i = 0; i < RoomNames.Count; i++)
+                    {
+                        string[] dividerForRoom = RoomNames[i].Split(',', System.StringSplitOptions.RemoveEmptyEntries);
+                        if(id == int.Parse(dividerForRoom[1]))
+                        {
+                            SendMessageToClient(yourTurn.ToString() + ',' + splitter[1], int.Parse(dividerForRoom[2]));
+                            Debug.Log(splitter[1] + " <<<<<");
+                        }
+                        else if(id == int.Parse(dividerForRoom[2]))
+                        {
+                            SendMessageToClient(yourTurn.ToString() + ',' + splitter[1], int.Parse(dividerForRoom[1]));
+                            Debug.Log(splitter[1] + " <<<<<");
+                        }
+                    }
+                        break;
+               
                 default:
                     break;
             }
