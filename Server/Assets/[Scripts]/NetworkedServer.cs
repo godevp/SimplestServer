@@ -22,6 +22,9 @@ public class NetworkedServer : MonoBehaviour
     [SerializeField] private GameObject GridForRooms;
 
 
+    //indetifires
+    private const int newPlayer = 1;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -40,9 +43,6 @@ public class NetworkedServer : MonoBehaviour
             savedAccounts.Add(line);
         }
         sr.Close();
-
-
-
 
     }
 
@@ -87,76 +87,108 @@ public class NetworkedServer : MonoBehaviour
 
     private void ProcessRecievedMsg(string msg, int id)
     {
+        int smth = 0;
         Debug.Log(msg);
         string[] splitter = msg.Split(',', System.StringSplitOptions.RemoveEmptyEntries);
-        switch (int.Parse(splitter[0]))//check the indetifier of the message
+        if(int.TryParse(splitter[0],out smth))
         {
-            case 0: //Log In
-                bool loginFound = false;
-                foreach (string account in savedAccounts)
-                {
-                    string[] splitter2 = account.Split(',', System.StringSplitOptions.RemoveEmptyEntries);
-
-                    if (splitter2[0] == splitter[1])
-                    {
-                        Debug.Log("Login found");
-                        loginFound = true;
-                        if (splitter2[1] == splitter[2])
-                            SendMessageToClient("LoginApproved", id);
-                        else
-                            SendMessageToClient("LoginDenied", id);
-
-                    }
-                }
-                if (!loginFound)
-                {
-                    Debug.Log("Login not found");
-                    SendMessageToClient("LoginDenied", id);
-                }
-                break;
-            case 1: //Registration
-
-                bool accountAlreadyExists = false;
-
-                foreach (string account in savedAccounts)
-                {
-                    string[] splitter2 = account.Split(',', System.StringSplitOptions.RemoveEmptyEntries);
-                    if (splitter2[0] == splitter[1])
-                        accountAlreadyExists = true;
-                }
-                if (!accountAlreadyExists)
-                {
-                    //Here we need to create saving of the new account
-                    string newAcc = splitter[1] + ',' + splitter[2];
-                    savedAccounts.Add(newAcc);
-                    File.Delete(savedAccountsFilePath);
-                    var sw = new StreamWriter(savedAccountsFilePath);
+            switch (int.Parse(splitter[0]))//check the indetifier of the message
+            {
+                case 0: //Log In
+                    bool loginFound = false;
                     foreach (string account in savedAccounts)
                     {
-                        sw.WriteLine(account);
+                        string[] splitter2 = account.Split(',', System.StringSplitOptions.RemoveEmptyEntries);
+
+                        if (splitter2[0] == splitter[1])
+                        {
+                            Debug.Log("Login found");
+                            loginFound = true;
+                            if (splitter2[1] == splitter[2])
+                                SendMessageToClient("LoginApproved", id);
+                            else
+                                SendMessageToClient("LoginDenied", id);
+
+                        }
+                    }
+                    if (!loginFound)
+                    {
+                        Debug.Log("Login not found");
+                        SendMessageToClient("LoginDenied", id);
+                    }
+                    break;
+                case 1: //Registration
+
+                    bool accountAlreadyExists = false;
+
+                    foreach (string account in savedAccounts)
+                    {
+                        string[] splitter2 = account.Split(',', System.StringSplitOptions.RemoveEmptyEntries);
+                        if (splitter2[0] == splitter[1])
+                            accountAlreadyExists = true;
+                    }
+                    if (!accountAlreadyExists)
+                    {
+                        //Here we need to create saving of the new account
+                        string newAcc = splitter[1] + ',' + splitter[2];
+                        savedAccounts.Add(newAcc);
+                        File.Delete(savedAccountsFilePath);
+                        var sw = new StreamWriter(savedAccountsFilePath);
+                        foreach (string account in savedAccounts)
+                        {
+                            sw.WriteLine(account);
+                        }
+
+                        sw.Close();
+                        Debug.Log("new account added");
+                        //here send back message that access achieved
+                        SendMessageToClient("LoginApproved", id);
+
+                    }
+                    break;
+
+                case 2:
+                    bool canCreate = true;
+                    for (int i = 0; i < RoomNames.Count; i++)
+                    {
+                        string[] dividerForRoom = RoomNames[i].Split(',', System.StringSplitOptions.RemoveEmptyEntries);
+                        Debug.Log("diverForRoom[0]: " + dividerForRoom[0] + " splitter[1]: " + splitter[1]);
+                        if (dividerForRoom[0] == splitter[1] && dividerForRoom.Length < 3)
+                        {
+                            canCreate = false;
+                            string temp = RoomNames[i];
+                            RoomNames.RemoveAt(i);
+                            RoomNames.Insert(i, temp + ',' + id.ToString());
+                            Debug.Log(RoomNames[i]);
+                            //send msg where we tell to join the stage with the game
+                            SendMessageToClient("SecondPlayer", id);
+                            break;
+                        }
+                        if (dividerForRoom[0] == splitter[1] && dividerForRoom.Length >= 3)
+                        {
+                            canCreate = false;
+                            break;
+                        }
+
+                    }
+                    if (canCreate)
+                    {
+
+                        var newRoom = Instantiate(prefabRoom, GridForRooms.transform);
+                        var roomName = newRoom.GetComponentInChildren<TMP_Text>().text = splitter[1];
+                        RoomNames.Add(splitter[1] + ',' + id.ToString());
+                        SendMessageToClient("FirstPlayer", id);
                     }
 
-                    sw.Close();
-                    Debug.Log("new account added");
-                    //here send back message that access achieved
-                    SendMessageToClient("LoginApproved", id);
 
-                }
-                break;
+                    //here send message back to client which will lead to connection to this room. The Client should change state.
+                    break;
 
-            case 2:
-                if (!RoomNames.Contains(splitter[1]))
-                {
-                    var newRoom = Instantiate(prefabRoom, GridForRooms.transform);
-                    var roomName = newRoom.GetComponentInChildren<TMP_Text>().text = splitter[1];
-                    RoomNames.Add(roomName);
-                }
-                //here send message back to client which will lead to connection to this room. The Client should change state.
-                break;
-
-            default:
-                break;
+                default:
+                    break;
+            }
         }
+        
     }
 
 }
