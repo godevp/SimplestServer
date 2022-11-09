@@ -16,10 +16,10 @@ public class NetworkedServer : MonoBehaviour
     int hostID;
     int socketPort = 5491;
     public List<string> savedAccounts;
-    public List<string> RoomNames;
     string savedAccountsFilePath = "savedAccounts.txt";
     [SerializeField] private GameObject prefabRoom;
     [SerializeField] private GameObject GridForRooms;
+    [SerializeField] private List<Room> rooms;
 
 
     //indetifires
@@ -152,65 +152,54 @@ public class NetworkedServer : MonoBehaviour
 
                 case 2:
                     bool canCreate = true;
-                    for (int i = 0; i < RoomNames.Count; i++)
+                    for(int z = 0; z < rooms.Count; z++)
                     {
-                        string[] dividerForRoom = RoomNames[i].Split(',', System.StringSplitOptions.RemoveEmptyEntries);
-                        Debug.Log("diverForRoom[0]: " + dividerForRoom[0] + " splitter[1]: " + splitter[1]);
-                        if (dividerForRoom[0] == splitter[1] && dividerForRoom.Length < 3)
+                        if (rooms[z].name == splitter[1] && rooms[z].id2 == 0)
                         {
                             canCreate = false;
-                            string temp = RoomNames[i];
-                            RoomNames.RemoveAt(i);
-                            RoomNames.Insert(i, temp + ',' + id.ToString());
-                            Debug.Log(RoomNames[i]);
-                            //send msg where we tell to join the stage with the game
+                            rooms[z].id2 = id;
                             SendMessageToClient("SecondPlayer", id);
-                            var z = Random.Range(1, 2);
-                            if(z == 1)
+                            Random.seed = System.DateTime.Now.Millisecond;
+                            var c = Random.Range(1, 2);
+                            if (c == 1)
                             {
 
                                 SendMessageToClient(turn1.ToString(), id);
-                                SendMessageToClient(turn2.ToString(), int.Parse(dividerForRoom[1]));
+                                SendMessageToClient(turn2.ToString(), rooms[z].id1);
                             }
-                            else if(z == 2)
+                            else if (c == 2)
                             {
                                 SendMessageToClient(turn2.ToString(), id);
-                                SendMessageToClient(turn1.ToString(), int.Parse(dividerForRoom[1]));
+                                SendMessageToClient(turn1.ToString(), rooms[z].id1);
                             }
-                            
-                            
                             break;
                         }
-                        if (dividerForRoom[0] == splitter[1] && dividerForRoom.Length >= 3)
+                        if (rooms[z].name == splitter[1] && rooms[z].id1 != 0 && rooms[z].id2 != 0)
                         {
                             canCreate = false;
                             break;
                         }
-
                     }
-                    if (canCreate)
+                    if(canCreate)
                     {
-
                         var newRoom = Instantiate(prefabRoom, GridForRooms.transform);
                         var roomName = newRoom.GetComponentInChildren<TMP_Text>().text = splitter[1];
-                        RoomNames.Add(splitter[1] + ',' + id.ToString());
+                        newRoom.GetComponent<Room>().name = splitter[1];
+                        newRoom.GetComponent<Room>().id1 = id;
+                        rooms.Add(newRoom.GetComponent<Room>());
                         SendMessageToClient("FirstPlayer", id);
                     }
-                    
-
-                    //here send message back to client which will lead to connection to this room. The Client should change state.
                     break;
                 case 777:
-                    for (int i = 0; i < RoomNames.Count; i++)
+                    for (int i = 0; i < rooms.Count; i++)
                     {
-                        string[] dividerForRoom = RoomNames[i].Split(',', System.StringSplitOptions.RemoveEmptyEntries);
-                        if(int.Parse(dividerForRoom[1]) == id )
+                        if (rooms[i].id1 == id )
                         {
-                            SendMessageToClient("Loser", int.Parse(dividerForRoom[2]));
+                            SendMessageToClient("Loser", rooms[i].id2);
                         }
-                        else if (int.Parse(dividerForRoom[2]) == id)
+                        else if (rooms[i].id2 == id)
                         {
-                            SendMessageToClient("Loser", int.Parse(dividerForRoom[1]));
+                            SendMessageToClient("Loser", rooms[i].id1);
                         }
                     }
 
@@ -218,18 +207,16 @@ public class NetworkedServer : MonoBehaviour
                         break;
 
                 case 1111:
-                    for (int i = 0; i < RoomNames.Count; i++)
+                    for (int i = 0; i < rooms.Count; i++)
                     {
-                        string[] dividerForRoom = RoomNames[i].Split(',', System.StringSplitOptions.RemoveEmptyEntries);
-                        if(id == int.Parse(dividerForRoom[1]))
+                      
+                        if(id == rooms[i].id1)
                         {
-                            SendMessageToClient(yourTurn.ToString() + ',' + splitter[1], int.Parse(dividerForRoom[2]));
-                            Debug.Log(splitter[1] + " <<<<<");
+                            SendMessageToClient(yourTurn.ToString() + ',' + splitter[1], rooms[i].id2);
                         }
-                        else if(id == int.Parse(dividerForRoom[2]))
+                        else if(id == rooms[i].id2)
                         {
-                            SendMessageToClient(yourTurn.ToString() + ',' + splitter[1], int.Parse(dividerForRoom[1]));
-                            Debug.Log(splitter[1] + " <<<<<");
+                            SendMessageToClient(yourTurn.ToString() + ',' + splitter[1], rooms[i].id1);
                         }
                     }
                         break;
