@@ -22,6 +22,9 @@ public class NetworkedServer : MonoBehaviour
     [SerializeField] private GameObject GridForRooms;
     [SerializeField] private List<Room> rooms;
 
+    public List<string> activeAccounts;
+    
+
 
     //indetifires
     private const int newPlayer = 1;
@@ -30,6 +33,7 @@ public class NetworkedServer : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        activeAccounts = new List<string>();
        instance = this;
         NetworkTransport.Init();
         ConnectionConfig config = new ConnectionConfig();
@@ -102,12 +106,15 @@ public class NetworkedServer : MonoBehaviour
                     {
                         string[] splitter2 = account.Split(',', System.StringSplitOptions.RemoveEmptyEntries);
 
-                        if (splitter2[0] == splitter[1])
+                        if (splitter2[0] == splitter[1] && !activeAccounts.Contains(splitter[1]))
                         {
                             Debug.Log("Login found");
                             loginFound = true;
                             if (splitter2[1] == splitter[2])
+                            {
                                 SendMessageToClient("LoginApproved", id);
+                                activeAccounts.Add(splitter[1]);
+                            }
                             else
                                 SendMessageToClient("LoginDenied", id);
 
@@ -232,6 +239,13 @@ public class NetworkedServer : MonoBehaviour
                         }
                     }
                     break;
+
+                case 321:
+
+                    activeAccounts.Remove(splitter[1]);
+
+                    break;
+
                 default:
                     break;
             }
