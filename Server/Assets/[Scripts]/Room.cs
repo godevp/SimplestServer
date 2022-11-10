@@ -15,6 +15,9 @@ public class Room : MonoBehaviour
     private const int Omsg = 888;
     private const int winner = 7777;
     private const int loser = 6666;
+    private const int tie = 3333;
+    private const int turn1 = 111;
+    private const int turn2 = 222;
     public bool gameOver = false;
     [SerializeField] private List<bool> slotsTaken;
     [SerializeField] private List<int> slotsByPlayer;
@@ -84,7 +87,8 @@ public class Room : MonoBehaviour
                 }
                 if (allTaken)
                 {
-                    Debug.Log(name + " Restart?");
+                    NetworkedServer.instance.SendMessageToClient(tie.ToString(), oPlayer);
+                    NetworkedServer.instance.SendMessageToClient(tie.ToString(), xPlayer);
                 }
             }
            
@@ -103,7 +107,7 @@ public class Room : MonoBehaviour
 
 
 
-    public void setRandomPlayer(int turn1, int turn2)
+    public void setRandomPlayer()
     {
         var x = Random.Range(1, 3);
         if (x == 1)
@@ -120,5 +124,21 @@ public class Room : MonoBehaviour
             NetworkedServer.instance.SendMessageToClient(turn2.ToString(), id1);
             NetworkedServer.instance.SendMessageToClient(turn1.ToString(), id2);
         }
+    }
+
+    public void RestartRoom()
+    {
+        xPlayer = 0;
+        oPlayer = 0;
+        gameOver = false;
+        for(int i = 0; i < slotsTaken.Count; i++)
+        {
+            slotsTaken[i] = false;
+            slotsByPlayer[i] = 0;
+        }
+        NetworkedServer.instance.SendMessageToClient(123.ToString(), id1);
+        NetworkedServer.instance.SendMessageToClient(123.ToString(), id2);
+        setRandomPlayer();
+        
     }
 }

@@ -25,8 +25,7 @@ public class NetworkedServer : MonoBehaviour
 
     //indetifires
     private const int newPlayer = 1;
-    public const int turn1 = 111;
-    public const int turn2 = 222;
+    
 
     // Start is called before the first frame update
     void Start()
@@ -159,7 +158,15 @@ public class NetworkedServer : MonoBehaviour
                             canCreate = false;
                             rooms[z].id2 = id;
                             SendMessageToClient("SecondPlayer", id);
-                            rooms[z].setRandomPlayer(turn1,turn2);
+                            rooms[z].setRandomPlayer();
+                            break;
+                        }
+                        if (rooms[z].name == splitter[1] && rooms[z].id1 == 0)
+                        {
+                            canCreate = false;
+                            rooms[z].id1 = id;
+                            SendMessageToClient("SecondPlayer", id);
+                            rooms[z].setRandomPlayer();
                             break;
                         }
                         if (rooms[z].name == splitter[1] && rooms[z].id1 != 0 && rooms[z].id2 != 0)
@@ -179,16 +186,51 @@ public class NetworkedServer : MonoBehaviour
                     }
                     break;
                 case 1111:
-                    Debug.Log("Got the message from : " + id);
                     foreach(Room _room in rooms)
                     {
                         if(_room.id1 == id || _room.id2 == id)
                         {
                             _room.GameLogicUpdate(int.Parse(splitter[1]),id);
+                            break;
                         }
                     }
+                    break;
 
 
+                case 96:
+                    foreach (Room _room in rooms)
+                    {
+                        if (_room.id1 == id || _room.id2 == id)
+                        {
+                            _room.RestartRoom();
+                            break;
+                        }
+                    }
+                    break;
+                case 69:
+                    foreach (Room _room in rooms)
+                    {
+                        if (_room.id1 == id)
+                        {
+                            _room.id1 = 0;
+                            break;
+                        }
+                        else if(_room.id2 == id)
+                        {
+                            _room.id2 = 0;
+                            break;
+                        }
+                    }
+                    for(int i = 0; i < rooms.Count; i++)
+                    {
+                        if(rooms[i].id1 == 0 && rooms[i].id2 == 0)
+                        {
+                            Destroy(rooms[i].gameObject);
+                            rooms.RemoveAt(i);
+                            i--;
+                            break;
+                        }
+                    }
                     break;
                 default:
                     break;
