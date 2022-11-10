@@ -36,6 +36,8 @@ public class Room : MonoBehaviour
                 slotsTaken[slotNumber - 1] = true;
                 NetworkedServer.instance.SendMessageToClient(Xmsg.ToString() + ',' + (slotNumber - 1).ToString(), xPlayer); //that he need to set the buttonSprite to X
                 NetworkedServer.instance.SendMessageToClient(Xmsg.ToString() + ',' + (slotNumber - 1).ToString(), oPlayer);//that he need to set the buttonSprite to X
+                UpdateObserver();
+
             }
             if (oPlayer == playerId && !slotsTaken[slotNumber - 1])
             {
@@ -43,6 +45,7 @@ public class Room : MonoBehaviour
                 slotsTaken[slotNumber - 1] = true;
                 NetworkedServer.instance.SendMessageToClient(Omsg.ToString() + ',' + (slotNumber - 1).ToString(), xPlayer); //that he need to set the buttonSprite to O
                 NetworkedServer.instance.SendMessageToClient(Omsg.ToString() + ',' + (slotNumber - 1).ToString(), oPlayer);//that he need to set the buttonSprite to O
+                UpdateObserver();
             }
 
             if ((slotsByPlayer[0] == xPlayer && slotsByPlayer[1] == xPlayer && slotsByPlayer[2] == xPlayer) ||
@@ -138,7 +141,28 @@ public class Room : MonoBehaviour
         }
         NetworkedServer.instance.SendMessageToClient(123.ToString(), id1);
         NetworkedServer.instance.SendMessageToClient(123.ToString(), id2);
-        setRandomPlayer();
+        foreach (var obs in spectatorsList)
+        { NetworkedServer.instance.SendMessageToClient(123.ToString(), obs); }
+            setRandomPlayer();
         
+    }
+    public void UpdateObserver()
+    {
+        foreach (var obs in spectatorsList)
+        {
+            for(int i = 0; i < slotsByPlayer.Count; i++)
+            {
+                if (slotsByPlayer[i] == xPlayer)
+                {
+                    NetworkedServer.instance.SendMessageToClient("6" + ',' + i.ToString(), obs);
+                }
+                else if (slotsByPlayer[i] == oPlayer)
+                {
+                    NetworkedServer.instance.SendMessageToClient("7" + ',' + i.ToString(), obs);
+                }
+                
+            }
+           
+        }
     }
 }

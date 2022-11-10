@@ -192,25 +192,23 @@ public class NetworkedServer : MonoBehaviour
                         SendMessageToClient("FirstPlayer", id);
                     }
                     break;
-                case 1111:
-                    foreach(Room _room in rooms)
+                    case 7:
+                    foreach (Room _room in rooms)
                     {
-                        if(_room.id1 == id || _room.id2 == id)
+                        if (_room.spectatorsList.Contains(id))
                         {
-                            _room.GameLogicUpdate(int.Parse(splitter[1]),id);
-                            break;
+                            _room.spectatorsList.Remove(id);
                         }
                     }
                     break;
-
-
-                case 96:
-                    foreach (Room _room in rooms)
+                case 8:
+                    foreach(Room _room in rooms)
                     {
-                        if (_room.id1 == id || _room.id2 == id)
+                        if (_room.name == splitter[1].ToString())
                         {
-                            _room.RestartRoom();
-                            break;
+                            _room.spectatorsList.Add(id);
+                            SendMessageToClient("5", id);
+                            _room.UpdateObserver();
                         }
                     }
                     break;
@@ -222,30 +220,32 @@ public class NetworkedServer : MonoBehaviour
                             _room.id1 = 0;
                             break;
                         }
-                        else if(_room.id2 == id)
+                        else if (_room.id2 == id)
                         {
                             _room.id2 = 0;
                             break;
                         }
                     }
-                    for(int i = 0; i < rooms.Count; i++)
+                    RoomRemove();
+                    break;
+                case 96:
+                    foreach (Room _room in rooms)
                     {
-                        if(rooms[i].id1 == 0 && rooms[i].id2 == 0)
+                        if (_room.id1 == id || _room.id2 == id)
                         {
-                            Destroy(rooms[i].gameObject);
-                            rooms.RemoveAt(i);
-                            i--;
+                            _room.RestartRoom();
                             break;
                         }
                     }
                     break;
-
                 case 321:
-
-                    activeAccounts.Remove(splitter[1]);
+                    if (activeAccounts.Contains(splitter[1]))
+                    {
+                        activeAccounts.Remove(splitter[1]);
+                    }
+                    RoomRemove();
 
                     break;
-
                 case 555:
 
                     foreach (Room _room in rooms)
@@ -264,6 +264,18 @@ public class NetworkedServer : MonoBehaviour
 
                     break;
 
+                case 1111:
+                    foreach(Room _room in rooms)
+                    {
+                        if(_room.id1 == id || _room.id2 == id)
+                        {
+                            _room.GameLogicUpdate(int.Parse(splitter[1]),id);
+                            break;
+                        }
+                    }
+                    break;
+
+
                 default:
                     break;
             }
@@ -271,7 +283,19 @@ public class NetworkedServer : MonoBehaviour
         
     }
 
-
+    void RoomRemove()
+    {
+        for (int i = 0; i < rooms.Count; i++)
+        {
+            if (rooms[i].id1 == 0 && rooms[i].id2 == 0)
+            {
+                Destroy(rooms[i].gameObject);
+                rooms.RemoveAt(i);
+                i--;
+                break;
+            }
+        }
+    }
 
 
 }
