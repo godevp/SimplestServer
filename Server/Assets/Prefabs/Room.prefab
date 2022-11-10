@@ -293,3 +293,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 47143a1c17ef53842b38af75f019f7d9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  name: 
+  id1: 0
+  id2: 0
+  xPlayer: 0
+  oPlayer: 0
+  spectatorsList: 
+  gameOver: 0
+  slotsTaken: 000000000000000000
+  slotsByPlayer: 000000000000000000000000000000000000000000000000000000000000000000000000

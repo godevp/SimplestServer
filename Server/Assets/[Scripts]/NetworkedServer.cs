@@ -10,6 +10,7 @@ using TMPro;
 
 public class NetworkedServer : MonoBehaviour
 {
+    public static NetworkedServer instance;
     int maxConnections = 1000;
     int reliableChannelID;
     int unreliableChannelID;
@@ -24,14 +25,13 @@ public class NetworkedServer : MonoBehaviour
 
     //indetifires
     private const int newPlayer = 1;
-    private const int turn1 = 111;
-    private const int turn2 = 222;
-    private const int yourTurn = 333;
+    public const int turn1 = 111;
+    public const int turn2 = 222;
 
     // Start is called before the first frame update
     void Start()
     {
-       
+       instance = this;
         NetworkTransport.Init();
         ConnectionConfig config = new ConnectionConfig();
         reliableChannelID = config.AddChannel(QosType.Reliable);
@@ -159,19 +159,7 @@ public class NetworkedServer : MonoBehaviour
                             canCreate = false;
                             rooms[z].id2 = id;
                             SendMessageToClient("SecondPlayer", id);
-                            Random.seed = System.DateTime.Now.Millisecond;
-                            var c = Random.Range(1, 2);
-                            if (c == 1)
-                            {
-
-                                SendMessageToClient(turn1.ToString(), id);
-                                SendMessageToClient(turn2.ToString(), rooms[z].id1);
-                            }
-                            else if (c == 2)
-                            {
-                                SendMessageToClient(turn2.ToString(), id);
-                                SendMessageToClient(turn1.ToString(), rooms[z].id1);
-                            }
+                            rooms[z].setRandomPlayer(turn1,turn2);
                             break;
                         }
                         if (rooms[z].name == splitter[1] && rooms[z].id1 != 0 && rooms[z].id2 != 0)
@@ -190,37 +178,18 @@ public class NetworkedServer : MonoBehaviour
                         SendMessageToClient("FirstPlayer", id);
                     }
                     break;
-                case 777:
-                    for (int i = 0; i < rooms.Count; i++)
-                    {
-                        if (rooms[i].id1 == id )
-                        {
-                            SendMessageToClient("Loser", rooms[i].id2);
-                        }
-                        else if (rooms[i].id2 == id)
-                        {
-                            SendMessageToClient("Loser", rooms[i].id1);
-                        }
-                    }
-
-
-                        break;
-
                 case 1111:
-                    for (int i = 0; i < rooms.Count; i++)
+                    Debug.Log("Got the message from : " + id);
+                    foreach(Room _room in rooms)
                     {
-                      
-                        if(id == rooms[i].id1)
+                        if(_room.id1 == id || _room.id2 == id)
                         {
-                            SendMessageToClient(yourTurn.ToString() + ',' + splitter[1], rooms[i].id2);
-                        }
-                        else if(id == rooms[i].id2)
-                        {
-                            SendMessageToClient(yourTurn.ToString() + ',' + splitter[1], rooms[i].id1);
+                            _room.GameLogicUpdate(int.Parse(splitter[1]),id);
                         }
                     }
-                        break;
-               
+
+
+                    break;
                 default:
                     break;
             }
