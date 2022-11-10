@@ -246,11 +246,32 @@ public class NetworkedServer : MonoBehaviour
 
                     break;
 
+                case 555:
+
+                    foreach (Room _room in rooms)
+                    {
+                        if (_room.id1 == id && _room.id2 != 0)
+                        {
+                            SendMessageToClient(555.ToString() + ',' + "id1 : " + splitter[1], _room.id2);
+                            break;
+                        }
+                        if (_room.id2 == id && _room.id1 != 0)
+                        {
+                            SendMessageToClient(555.ToString() + ',' + "id2 : " + splitter[1], _room.id1);
+                            break;
+                        }
+                    }
+
+                    break;
+
                 default:
                     break;
             }
         }
         
     }
+
+
+
 
 }
