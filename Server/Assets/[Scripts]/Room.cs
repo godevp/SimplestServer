@@ -22,12 +22,26 @@ public class Room : MonoBehaviour
 
     private List<int> whoMoved;
     private List<int> whereMoved;
-
+    public bool startTheReplay = false;
 
     private void Start()
     {
         whoMoved = new List<int>();
         whereMoved = new List<int>();
+
+        StartCoroutine(MyUpdate(1.5f));//used for replay
+    }
+
+    private IEnumerator MyUpdate(float delay)
+    {
+
+        if(startTheReplay)
+        {
+            //make the logic here for the replay
+             
+        }
+        yield return new WaitForSeconds(delay);
+        StartCoroutine(MyUpdate(delay));
     }
 
     public void GameLogicUpdate(int slotNumber, int playerId)
