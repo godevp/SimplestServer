@@ -3,6 +3,10 @@ using System.Collections.Generic;
 using UnityEditor.PackageManager;
 using UnityEngine;
 
+
+
+
+
 public class Room : MonoBehaviour
 {
     public string name;
@@ -11,19 +15,20 @@ public class Room : MonoBehaviour
     public int xPlayer;
     public int oPlayer;
     public List<int> spectatorsList;
-    private const int Xmsg = 999;
-    private const int Omsg = 888;
-    private const int winner = 7777;
-    private const int loser = 6666;
-    private const int tie = 3333;
-    private const int turn1 = 111;
-    private const int turn2 = 222;
     public bool gameOver = false;
     [SerializeField] private List<bool> slotsTaken;
     [SerializeField] private List<int> slotsByPlayer;
 
 
+    private List<int> whoMoved;
+    private List<int> whereMoved;
 
+
+    private void Start()
+    {
+        whoMoved = new List<int>();
+        whereMoved = new List<int>();
+    }
 
     public void GameLogicUpdate(int slotNumber, int playerId)
     {
@@ -34,8 +39,9 @@ public class Room : MonoBehaviour
                 
                 slotsByPlayer[slotNumber - 1] = xPlayer;
                 slotsTaken[slotNumber - 1] = true;
-                NetworkedServer.instance.SendMessageToClient(Xmsg.ToString() + ',' + (slotNumber - 1).ToString(), xPlayer); //that he need to set the buttonSprite to X
-                NetworkedServer.instance.SendMessageToClient(Xmsg.ToString() + ',' + (slotNumber - 1).ToString(), oPlayer);//that he need to set the buttonSprite to X
+                MovesSaver(xPlayer, slotNumber);
+                NetworkedServer.instance.SendMessageToClient(Ident.PlayerUpdateX + ',' + (slotNumber - 1).ToString(), xPlayer); //that he need to set the buttonSprite to X
+                NetworkedServer.instance.SendMessageToClient(Ident.PlayerUpdateX + ',' + (slotNumber - 1).ToString(), oPlayer);//that he need to set the buttonSprite to X
                 UpdateObserver();
 
             }
@@ -43,8 +49,9 @@ public class Room : MonoBehaviour
             {
                 slotsByPlayer[slotNumber - 1] = oPlayer;
                 slotsTaken[slotNumber - 1] = true;
-                NetworkedServer.instance.SendMessageToClient(Omsg.ToString() + ',' + (slotNumber - 1).ToString(), xPlayer); //that he need to set the buttonSprite to O
-                NetworkedServer.instance.SendMessageToClient(Omsg.ToString() + ',' + (slotNumber - 1).ToString(), oPlayer);//that he need to set the buttonSprite to O
+                MovesSaver(oPlayer, slotNumber);
+                NetworkedServer.instance.SendMessageToClient(Ident.PlayerUpdateO + ',' + (slotNumber - 1).ToString(), xPlayer); //that he need to set the buttonSprite to O
+                NetworkedServer.instance.SendMessageToClient(Ident.PlayerUpdateO + ',' + (slotNumber - 1).ToString(), oPlayer);//that he need to set the buttonSprite to O
                 UpdateObserver();
             }
 
@@ -58,8 +65,8 @@ public class Room : MonoBehaviour
                   (slotsByPlayer[0] == xPlayer && slotsByPlayer[4] == xPlayer && slotsByPlayer[8] == xPlayer))
             {
                 //send xplayer winner and oplayer loser
-                NetworkedServer.instance.SendMessageToClient(winner.ToString(),xPlayer);
-                NetworkedServer.instance.SendMessageToClient(loser.ToString(), oPlayer);
+                NetworkedServer.instance.SendMessageToClient(Ident.winner,xPlayer);
+                NetworkedServer.instance.SendMessageToClient(Ident.loser, oPlayer);
                 gameOver = true;
             }
             else if ((slotsByPlayer[0] == oPlayer && slotsByPlayer[1] == oPlayer && slotsByPlayer[2] == oPlayer) ||
@@ -72,8 +79,8 @@ public class Room : MonoBehaviour
                   (slotsByPlayer[0] == oPlayer && slotsByPlayer[4] == oPlayer && slotsByPlayer[8] == oPlayer))
             {
                 //send oPlayer winner and xplayer loser
-                NetworkedServer.instance.SendMessageToClient(winner.ToString(), oPlayer);
-                NetworkedServer.instance.SendMessageToClient(loser.ToString(), xPlayer);
+                NetworkedServer.instance.SendMessageToClient(Ident.winner, oPlayer);
+                NetworkedServer.instance.SendMessageToClient(Ident.loser, xPlayer);
                 gameOver = true;
             }
             
@@ -90,24 +97,36 @@ public class Room : MonoBehaviour
                 }
                 if (allTaken)
                 {
-                    NetworkedServer.instance.SendMessageToClient(tie.ToString(), oPlayer);
-                    NetworkedServer.instance.SendMessageToClient(tie.ToString(), xPlayer);
+                    NetworkedServer.instance.SendMessageToClient(Ident.tie, oPlayer);
+                    NetworkedServer.instance.SendMessageToClient(Ident.tie, xPlayer);
                 }
             }
            
         }
 
-        MovesSaver();
+     
     }
 
 
-
-    void MovesSaver()
+    public void Replay()
     {
-
+        for(int i = 0; i < whoMoved.Count;i++)
+        {
+            StartCoroutine(myTimer(2,i));
+            i--;
+        }
+ 
     }
-
-
+    private IEnumerator myTimer(float timer, int index)
+    {
+        yield return new WaitForSeconds(timer);
+    }
+ 
+    void MovesSaver(int id, int slotNumber)
+    {
+        whoMoved.Add(id);
+        whereMoved.Add(slotNumber - 1);
+    }
 
 
     public void setRandomPlayer()
@@ -117,15 +136,15 @@ public class Room : MonoBehaviour
         {
             xPlayer = id1;
             oPlayer = id2;
-            NetworkedServer.instance.SendMessageToClient(turn1.ToString(), id1);
-            NetworkedServer.instance.SendMessageToClient(turn2.ToString(), id2);
+            NetworkedServer.instance.SendMessageToClient(Ident.turn1, id1);
+            NetworkedServer.instance.SendMessageToClient(Ident.turn2, id2);
         }
         else
         {
             xPlayer = id2;
             oPlayer = id1;
-            NetworkedServer.instance.SendMessageToClient(turn2.ToString(), id1);
-            NetworkedServer.instance.SendMessageToClient(turn1.ToString(), id2);
+            NetworkedServer.instance.SendMessageToClient(Ident.turn2, id1);
+            NetworkedServer.instance.SendMessageToClient(Ident.turn1, id2);
         }
     }
 
@@ -139,10 +158,10 @@ public class Room : MonoBehaviour
             slotsTaken[i] = false;
             slotsByPlayer[i] = 0;
         }
-        NetworkedServer.instance.SendMessageToClient(123.ToString(), id1);
-        NetworkedServer.instance.SendMessageToClient(123.ToString(), id2);
+        NetworkedServer.instance.SendMessageToClient(Ident.restart.ToString(), id1);
+        NetworkedServer.instance.SendMessageToClient(Ident.restart.ToString(), id2);
         foreach (var obs in spectatorsList)
-        { NetworkedServer.instance.SendMessageToClient(123.ToString(), obs); }
+        { NetworkedServer.instance.SendMessageToClient(Ident.restart.ToString(), obs); }
             setRandomPlayer();
         
     }
@@ -154,11 +173,11 @@ public class Room : MonoBehaviour
             {
                 if (slotsByPlayer[i] == xPlayer)
                 {
-                    NetworkedServer.instance.SendMessageToClient("6" + ',' + i.ToString(), obs);
+                    NetworkedServer.instance.SendMessageToClient(Ident.ObsUpdateX + ',' + i.ToString(), obs);
                 }
                 else if (slotsByPlayer[i] == oPlayer)
                 {
-                    NetworkedServer.instance.SendMessageToClient("7" + ',' + i.ToString(), obs);
+                    NetworkedServer.instance.SendMessageToClient(Ident.ObsUpdateO + ',' + i.ToString(), obs);
                 }
                 
             }

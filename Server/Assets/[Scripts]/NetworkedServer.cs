@@ -8,6 +8,35 @@ using UnityEngine.UI;
 using Unity.VisualScripting;
 using TMPro;
 
+public struct Ident
+{
+    public const string LoginApproved = "1";
+    public const string LoginDenied = "2";
+    public const string Player = "3";
+    public const string SecondPlayer = "4";
+    public const short Spectator = 5;
+    public const short ChatMsg = 6;
+    public const string ObsUpdateX = "7";
+    public const string ObsUpdateO = "8";
+    public const string PlayerUpdateX = "9";
+    public const string PlayerUpdateO = "10";
+    public const string winner = "11";
+    public const string loser = "12";
+    public const string tie = "13";
+    public const string turn1 = "14";
+    public const string turn2 = "15";
+    public const short restart = 16;
+    public const short stopWatching = 17;
+    public const short exit = 18;
+    public const short move = 20;
+    public const short dscnt = 21;
+    public const short room = 22;
+    public const short reg = 23;
+    public const short logIn = 24;
+}
+
+
+
 public class NetworkedServer : MonoBehaviour
 {
     public static NetworkedServer instance;
@@ -25,9 +54,6 @@ public class NetworkedServer : MonoBehaviour
     public List<string> activeAccounts;
     
 
-
-    //indetifires
-    private const int newPlayer = 1;
     
 
     // Start is called before the first frame update
@@ -100,7 +126,7 @@ public class NetworkedServer : MonoBehaviour
         {
             switch (int.Parse(splitter[0]))//check the indetifier of the message
             {
-                case 0: //Log In
+                case Ident.logIn: //Log In
                     bool loginFound = false;
                     foreach (string account in savedAccounts)
                     {
@@ -108,25 +134,24 @@ public class NetworkedServer : MonoBehaviour
 
                         if (splitter2[0] == splitter[1] && !activeAccounts.Contains(splitter[1]))
                         {
-                            Debug.Log("Login found");
                             loginFound = true;
                             if (splitter2[1] == splitter[2])
                             {
-                                SendMessageToClient("LoginApproved", id);
+                                SendMessageToClient(Ident.LoginApproved, id);
                                 activeAccounts.Add(splitter[1]);
                             }
                             else
-                                SendMessageToClient("LoginDenied", id);
+                                SendMessageToClient(Ident.LoginDenied, id);
 
                         }
                     }
                     if (!loginFound)
                     {
-                        Debug.Log("Login not found");
-                        SendMessageToClient("LoginDenied", id);
+                        SendMessageToClient(Ident.LoginDenied, id);
                     }
                     break;
-                case 1: //Registration
+
+                case Ident.reg: //Registration
 
                     bool accountAlreadyExists = false;
 
@@ -149,14 +174,13 @@ public class NetworkedServer : MonoBehaviour
                         }
 
                         sw.Close();
-                        Debug.Log("new account added");
                         //here send back message that access achieved
-                        SendMessageToClient("LoginApproved", id);
+                        SendMessageToClient(Ident.LoginApproved, id);
 
                     }
                     break;
 
-                case 2:
+                case Ident.room: //room creation
                     bool canCreate = true;
                     for(int z = 0; z < rooms.Count; z++)
                     {
@@ -164,7 +188,7 @@ public class NetworkedServer : MonoBehaviour
                         {
                             canCreate = false;
                             rooms[z].id2 = id;
-                            SendMessageToClient("SecondPlayer", id);
+                            SendMessageToClient(Ident.Player, id);
                             rooms[z].setRandomPlayer();
                             break;
                         }
@@ -172,7 +196,7 @@ public class NetworkedServer : MonoBehaviour
                         {
                             canCreate = false;
                             rooms[z].id1 = id;
-                            SendMessageToClient("SecondPlayer", id);
+                            SendMessageToClient(Ident.Player, id);
                             rooms[z].setRandomPlayer();
                             break;
                         }
@@ -189,10 +213,11 @@ public class NetworkedServer : MonoBehaviour
                         newRoom.GetComponent<Room>().name = splitter[1];
                         newRoom.GetComponent<Room>().id1 = id;
                         rooms.Add(newRoom.GetComponent<Room>());
-                        SendMessageToClient("FirstPlayer", id);
+                        SendMessageToClient(Ident.Player, id);
                     }
                     break;
-                    case 7:
+
+                case Ident.stopWatching: //spectator removal
                     foreach (Room _room in rooms)
                     {
                         if (_room.spectatorsList.Contains(id))
@@ -201,18 +226,20 @@ public class NetworkedServer : MonoBehaviour
                         }
                     }
                     break;
-                case 8:
+
+                case Ident.Spectator: //spectator adding
                     foreach(Room _room in rooms)
                     {
-                        if (_room.name == splitter[1].ToString())
+                        if (_room.name == splitter[1].ToString() && _room.id1 !=0 && _room.id2 != 0)
                         {
                             _room.spectatorsList.Add(id);
-                            SendMessageToClient("5", id);
+                            SendMessageToClient(Ident.Spectator.ToString(), id);
                             _room.UpdateObserver();
                         }
                     }
                     break;
-                case 69:
+
+                case Ident.exit: //when players exit the room, we need to delete it
                     foreach (Room _room in rooms)
                     {
                         if (_room.id1 == id)
@@ -228,7 +255,8 @@ public class NetworkedServer : MonoBehaviour
                     }
                     RoomRemove();
                     break;
-                case 96:
+
+                case Ident.restart://restart the game 
                     foreach (Room _room in rooms)
                     {
                         if (_room.id1 == id || _room.id2 == id)
@@ -238,33 +266,33 @@ public class NetworkedServer : MonoBehaviour
                         }
                     }
                     break;
-                case 321:
+
+                case Ident.dscnt://when somebody disonnects he's account is open
                     if (activeAccounts.Contains(splitter[1]))
                     {
                         activeAccounts.Remove(splitter[1]);
                     }
                     RoomRemove();
-
                     break;
-                case 555:
+
+                case Ident.ChatMsg://messages in chat
 
                     foreach (Room _room in rooms)
                     {
                         if (_room.id1 == id && _room.id2 != 0)
                         {
-                            SendMessageToClient(555.ToString() + ',' + "id1 : " + splitter[1], _room.id2);
+                            SendMessageToClient(Ident.ChatMsg.ToString() + ',' + "id1 : " + splitter[1], _room.id2);
                             break;
                         }
                         if (_room.id2 == id && _room.id1 != 0)
                         {
-                            SendMessageToClient(555.ToString() + ',' + "id2 : " + splitter[1], _room.id1);
+                            SendMessageToClient(Ident.ChatMsg.ToString() + ',' + "id2 : " + splitter[1], _room.id1);
                             break;
                         }
                     }
-
                     break;
 
-                case 1111:
+                case Ident.move: //After players move
                     foreach(Room _room in rooms)
                     {
                         if(_room.id1 == id || _room.id2 == id)
