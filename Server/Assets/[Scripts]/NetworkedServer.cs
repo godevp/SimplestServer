@@ -268,7 +268,7 @@ public class NetworkedServer : MonoBehaviour
                     break;
 
                 case Ident.dscnt://when somebody disonnects he's account is open
-                    if (activeAccounts.Contains(splitter[1]))
+                    if (activeAccounts.Contains(splitter[1]) && splitter.Length > 1)
                     {
                         activeAccounts.Remove(splitter[1]);
                     }

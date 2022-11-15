@@ -29,19 +29,39 @@ public class Room : MonoBehaviour
         whoMoved = new List<int>();
         whereMoved = new List<int>();
 
-        StartCoroutine(MyUpdate(1.5f));//used for replay
+       
     }
 
     private IEnumerator MyUpdate(float delay)
     {
 
-        if(startTheReplay)
+        if(startTheReplay && whoMoved.Count > 1 && whereMoved.Count > 1)
         {
             //make the logic here for the replay
-             
+            Debug.Log("Who : " + whoMoved[0]);
+            Debug.Log("Where : " + whereMoved[0]);
+
+            whoMoved.RemoveAt(0);
+            whereMoved.RemoveAt(0);
+        }
+        if(whoMoved.Count <= 0)
+        {
+            startTheReplay = false;
         }
         yield return new WaitForSeconds(delay);
         StartCoroutine(MyUpdate(delay));
+    }
+
+    public void Replay()
+    {
+        startTheReplay = true;
+        StartCoroutine(MyUpdate(1.5f));//used for replay
+
+    }
+    void MovesSaver(int id, int slotNumber)
+    {
+        whoMoved.Add(id);
+        whereMoved.Add(slotNumber - 1);
     }
 
     public void GameLogicUpdate(int slotNumber, int playerId)
@@ -121,26 +141,6 @@ public class Room : MonoBehaviour
      
     }
 
-
-    public void Replay()
-    {
-        for(int i = 0; i < whoMoved.Count;i++)
-        {
-            StartCoroutine(myTimer(2,i));
-            i--;
-        }
- 
-    }
-    private IEnumerator myTimer(float timer, int index)
-    {
-        yield return new WaitForSeconds(timer);
-    }
- 
-    void MovesSaver(int id, int slotNumber)
-    {
-        whoMoved.Add(id);
-        whereMoved.Add(slotNumber - 1);
-    }
 
 
     public void setRandomPlayer()
