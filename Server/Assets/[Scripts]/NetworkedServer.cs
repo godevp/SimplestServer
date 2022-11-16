@@ -33,6 +33,8 @@ public struct Ident
     public const short room = 22;
     public const short reg = 23;
     public const short logIn = 24;
+    public const string FeelTheListOfReplays = "25";
+    public const string CleanTheListOfReplays = "26";
 }
 
 
@@ -138,7 +140,8 @@ public class NetworkedServer : MonoBehaviour
                             if (splitter2[1] == splitter[2])
                             {
                                 SendMessageToClient(Ident.LoginApproved, id);
-                                activeAccounts.Add(splitter[1]);
+                                activeAccounts.Add(splitter[1] + ',' + id.ToString());
+                                UpdatePlayersListOfReplays(splitter[1], id);
                             }
                             else
                                 SendMessageToClient(Ident.LoginDenied, id);
@@ -176,6 +179,8 @@ public class NetworkedServer : MonoBehaviour
                         sw.Close();
                         //here send back message that access achieved
                         SendMessageToClient(Ident.LoginApproved, id);
+                        activeAccounts.Add(splitter[1] + ',' + id.ToString());
+                        UpdatePlayersListOfReplays(splitter[1], id);
 
                     }
                     break;
@@ -190,6 +195,8 @@ public class NetworkedServer : MonoBehaviour
                             rooms[z].id2 = id;
                             SendMessageToClient(Ident.Player, id);
                             rooms[z].setRandomPlayer();
+                            SetPlayerForRoom(id, 2, rooms[z]);
+                            SetPlayerForRoom(rooms[z].id1, 1, rooms[z]);
                             break;
                         }
                         if (rooms[z].name == splitter[1] && rooms[z].id1 == 0)
@@ -198,6 +205,7 @@ public class NetworkedServer : MonoBehaviour
                             rooms[z].id1 = id;
                             SendMessageToClient(Ident.Player, id);
                             rooms[z].setRandomPlayer();
+                            SetPlayerForRoom(id, 1, rooms[z]);
                             break;
                         }
                         if (rooms[z].name == splitter[1] && rooms[z].id1 != 0 && rooms[z].id2 != 0)
@@ -212,6 +220,8 @@ public class NetworkedServer : MonoBehaviour
                         var roomName = newRoom.GetComponentInChildren<TMP_Text>().text = splitter[1];
                         newRoom.GetComponent<Room>().name = splitter[1];
                         newRoom.GetComponent<Room>().id1 = id;
+                        
+                         
                         rooms.Add(newRoom.GetComponent<Room>());
                         SendMessageToClient(Ident.Player, id);
                     }
@@ -309,6 +319,36 @@ public class NetworkedServer : MonoBehaviour
             }
         }
         
+    }
+    void SetPlayerForRoom(int id, int playerNumber, Room _room)
+    {
+        foreach (string acc in activeAccounts)
+        {
+            string[] accSplitter = acc.Split(',');
+            if (accSplitter[1] == id.ToString())
+            {
+                _room.SetAccounts(accSplitter[0], playerNumber);
+            }
+        }
+    }
+
+    void UpdatePlayersListOfReplays(string playerLogin,int playerID)
+    {
+        SendMessageToClient(Ident.CleanTheListOfReplays, playerID);
+
+        if(File.Exists(playerLogin + ".txt"))
+        {
+            
+            var sr = new StreamReader(playerLogin + ".txt");
+            string line = "";
+            while((line = sr.ReadLine())!= null)
+            {
+                SendMessageToClient(Ident.FeelTheListOfReplays + ',' + line, playerID);
+            }
+
+            sr.Close();
+        }
+ 
     }
 
     void RoomRemove()

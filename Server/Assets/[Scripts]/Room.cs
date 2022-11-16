@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEditor.PackageManager;
 using UnityEngine;
-
+using System.IO;
 
 
 
@@ -19,6 +19,11 @@ public class Room : MonoBehaviour
     [SerializeField] private List<bool> slotsTaken;
     [SerializeField] private List<int> slotsByPlayer;
 
+    public List<string> account1Names;
+    public List<string> account2Names;
+    public string account1File;
+    public string account2File;
+
 
     private List<int> whoMoved;
     private List<int> whereMoved;
@@ -28,7 +33,8 @@ public class Room : MonoBehaviour
     {
         whoMoved = new List<int>();
         whereMoved = new List<int>();
-
+        account1Names = new List<string>();
+        account2Names = new List<string>();
        
     }
 
@@ -50,6 +56,37 @@ public class Room : MonoBehaviour
         }
         yield return new WaitForSeconds(delay);
         StartCoroutine(MyUpdate(delay));
+    }
+
+    public void SetAccounts(string accountName, int idNumber)
+    {
+        if(idNumber == 1)
+        {
+            account1File = accountName + ".txt";
+            ReadTheFile(account1File, account1Names);
+        }
+        if(idNumber == 2)
+        {
+            account2File = accountName + ".txt";
+            ReadTheFile(account2File, account2Names);
+        }
+    }
+
+    void ReadTheFile(string accountFile, List<string> accountFilesList)
+    {
+        accountFilesList.Clear();
+
+        if (File.Exists(accountFile))
+        {
+            var sr = new StreamReader(accountFile);
+            string line = "";
+            while ((line = sr.ReadLine()) != null)
+            {
+                Debug.Log(line);
+                accountFilesList.Add(line);
+            }
+            sr.Close();
+        }
     }
 
     public void Replay()
@@ -102,6 +139,10 @@ public class Room : MonoBehaviour
                 NetworkedServer.instance.SendMessageToClient(Ident.winner,xPlayer);
                 NetworkedServer.instance.SendMessageToClient(Ident.loser, oPlayer);
                 gameOver = true;
+
+                //need to save the game to file
+                SaveTheFileForAcc(account1File , account1Names);
+                SaveTheFileForAcc(account2File , account2Names);
             }
             else if ((slotsByPlayer[0] == oPlayer && slotsByPlayer[1] == oPlayer && slotsByPlayer[2] == oPlayer) ||
                   (slotsByPlayer[3] == oPlayer && slotsByPlayer[4] == oPlayer && slotsByPlayer[5] == oPlayer) ||
@@ -116,8 +157,11 @@ public class Room : MonoBehaviour
                 NetworkedServer.instance.SendMessageToClient(Ident.winner, oPlayer);
                 NetworkedServer.instance.SendMessageToClient(Ident.loser, xPlayer);
                 gameOver = true;
+                //need to save the game to file
+                SaveTheFileForAcc(account1File , account1Names);
+                SaveTheFileForAcc(account2File , account2Names);
             }
-            
+
             if (!gameOver)
             {
                 bool allTaken = true;
@@ -133,12 +177,36 @@ public class Room : MonoBehaviour
                 {
                     NetworkedServer.instance.SendMessageToClient(Ident.tie, oPlayer);
                     NetworkedServer.instance.SendMessageToClient(Ident.tie, xPlayer);
+                    //need to save the game to file
+                    SaveTheFileForAcc(account1File, account1Names);
+                    SaveTheFileForAcc(account2File, account2Names);
                 }
             }
            
         }
 
      
+    }
+
+    void SaveTheFileForAcc(string accFile, List<string> ListOfGames)
+    {
+        var s = new StreamWriter(System.DateTime.Now.ToString() + id1.ToString() + id2.ToString()+ ".txt");
+        ListOfGames.Add(System.DateTime.Now.ToString() + id1.ToString() + id2.ToString() + ".txt");
+        int o = 0;
+        foreach(int c in whoMoved)
+        {
+            s.WriteLine(c.ToString() + ',' + whereMoved[o]);
+            o++;
+        }
+
+        s.Close();
+
+        var sw = new StreamWriter(accFile);
+        foreach(string g in ListOfGames)
+        {
+            sw.WriteLine(g);
+        }
+        sw.Close();
     }
 
 
