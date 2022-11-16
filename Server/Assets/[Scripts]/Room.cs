@@ -41,7 +41,7 @@ public class Room : MonoBehaviour
     private IEnumerator MyUpdate(float delay)
     {
 
-        if(startTheReplay && whoMoved.Count > 1 && whereMoved.Count > 1)
+        if(startTheReplay && whoMoved.Count > 0 && whereMoved.Count > 0)
         {
             //make the logic here for the replay
             Debug.Log("Who : " + whoMoved[0]);
@@ -55,6 +55,7 @@ public class Room : MonoBehaviour
             startTheReplay = false;
         }
         yield return new WaitForSeconds(delay);
+        if(whoMoved.Count > 0)
         StartCoroutine(MyUpdate(delay));
     }
 
