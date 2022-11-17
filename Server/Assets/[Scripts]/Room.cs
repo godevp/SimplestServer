@@ -38,26 +38,7 @@ public class Room : MonoBehaviour
        
     }
 
-    private IEnumerator MyUpdate(float delay)
-    {
-
-        if(startTheReplay && whoMoved.Count > 0 && whereMoved.Count > 0)
-        {
-            //make the logic here for the replay
-            Debug.Log("Who : " + whoMoved[0]);
-            Debug.Log("Where : " + whereMoved[0]);
-
-            whoMoved.RemoveAt(0);
-            whereMoved.RemoveAt(0);
-        }
-        if(whoMoved.Count <= 0)
-        {
-            startTheReplay = false;
-        }
-        yield return new WaitForSeconds(delay);
-        if(whoMoved.Count > 0)
-        StartCoroutine(MyUpdate(delay));
-    }
+   
 
     public void SetAccounts(string accountName, int idNumber)
     {
@@ -90,15 +71,16 @@ public class Room : MonoBehaviour
         }
     }
 
-    public void Replay()
-    {
-        startTheReplay = true;
-        StartCoroutine(MyUpdate(1.5f));//used for replay
-
-    }
     void MovesSaver(int id, int slotNumber)
     {
-        whoMoved.Add(id);
+        if(id == xPlayer)
+        {
+            whoMoved.Add(1);
+        }    
+        if(id == oPlayer)
+        {
+            whoMoved.Add(2);
+        }
         whereMoved.Add(slotNumber - 1);
     }
 
@@ -208,6 +190,8 @@ public class Room : MonoBehaviour
             sw.WriteLine(g);
         }
         sw.Close();
+       // whoMoved.Clear();
+        //whereMoved.Clear();
     }
 
 
@@ -235,6 +219,8 @@ public class Room : MonoBehaviour
     {
         xPlayer = 0;
         oPlayer = 0;
+        whoMoved.Clear();
+        whereMoved.Clear();
         gameOver = false;
         for(int i = 0; i < slotsTaken.Count; i++)
         {

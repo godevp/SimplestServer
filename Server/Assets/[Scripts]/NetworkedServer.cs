@@ -130,16 +130,25 @@ public class NetworkedServer : MonoBehaviour
             switch (int.Parse(splitter[0]))//check the indetifier of the message
             {
                 case Ident.logIn: //Log In
+                    List<string> tempList = new List<string>();
+                    foreach (string activeAcc in activeAccounts)
+                    {
+                        string[] actAccSplit = activeAcc.Split(',', System.StringSplitOptions.RemoveEmptyEntries);
+                        tempList.Add(actAccSplit[0]);
+                    }
                     bool loginFound = false;
                     foreach (string account in savedAccounts)
                     {
                         string[] splitter2 = account.Split(',', System.StringSplitOptions.RemoveEmptyEntries);
 
-                        if (splitter2[0] == splitter[1] && !activeAccounts.Contains(splitter[1]))
-                        {
+                       
+                            if (splitter2[0] == splitter[1] && !tempList.Contains(splitter[1]))
+                            {
+
                             loginFound = true;
                             if (splitter2[1] == splitter[2])
                             {
+                                Debug.Log(splitter[1]);
                                 SendMessageToClient(Ident.LoginApproved, id);
                                 activeAccounts.Add(splitter[1] + ',' + id.ToString());
                                 UpdatePlayersListOfReplays(splitter[1], id);
@@ -147,7 +156,7 @@ public class NetworkedServer : MonoBehaviour
                             else
                                 SendMessageToClient(Ident.LoginDenied, id);
 
-                        }
+                            }
                     }
                     if (!loginFound)
                     {
@@ -279,9 +288,18 @@ public class NetworkedServer : MonoBehaviour
                     break;
 
                 case Ident.dscnt://when somebody disonnects he's account is open
+
                     if (activeAccounts.Contains(splitter[1]) && splitter.Length > 1)
                     {
                         activeAccounts.Remove(splitter[1]);
+                    }
+                    for(int i = 0; i < activeAccounts.Count; i++)
+                    {
+                        string[] spl = activeAccounts[i].Split(',', System.StringSplitOptions.RemoveEmptyEntries);
+                        if (spl[0] == splitter[1])
+                        {
+                            activeAccounts.RemoveAt(i);
+                        }
                     }
                     RoomRemove();
                     break;
