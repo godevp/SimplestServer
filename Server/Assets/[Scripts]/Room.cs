@@ -191,8 +191,8 @@ public class Room : MonoBehaviour
 
     void SaveTheFileForAcc(string accFile, List<string> ListOfGames)
     {
-        var s = new StreamWriter(System.DateTime.Now.ToString() + id1.ToString() + id2.ToString()+ ".txt");
-        ListOfGames.Add(System.DateTime.Now.ToString() + id1.ToString() + id2.ToString() + ".txt");
+        var s = new StreamWriter(System.DateTime.Now.Hour.ToString() + "." + System.DateTime.Now.Minute.ToString() + "." + System.DateTime.Now.Second.ToString() + id1.ToString() + id2.ToString()+ ".txt");
+        ListOfGames.Add(System.DateTime.Now.Hour.ToString() + "." + System.DateTime.Now.Minute.ToString() + "." + System.DateTime.Now.Second.ToString() + id1.ToString() + id2.ToString() + ".txt"); 
         int o = 0;
         foreach(int c in whoMoved)
         {

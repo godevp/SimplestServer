@@ -7,6 +7,8 @@ using System.IO;
 using UnityEngine.UI;
 using Unity.VisualScripting;
 using TMPro;
+using System.Linq;
+using System.Security.Cryptography;
 
 public struct Ident
 {
@@ -14,8 +16,8 @@ public struct Ident
     public const string LoginDenied = "2";
     public const string Player = "3";
     public const string SecondPlayer = "4";
-    public const short Spectator = 5;
-    public const short ChatMsg = 6;
+    public const int Spectator = 5;
+    public const int ChatMsg = 6;
     public const string ObsUpdateX = "7";
     public const string ObsUpdateO = "8";
     public const string PlayerUpdateX = "9";
@@ -25,16 +27,16 @@ public struct Ident
     public const string tie = "13";
     public const string turn1 = "14";
     public const string turn2 = "15";
-    public const short restart = 16;
-    public const short stopWatching = 17;
-    public const short exit = 18;
-    public const short move = 20;
-    public const short dscnt = 21;
-    public const short room = 22;
-    public const short reg = 23;
-    public const short logIn = 24;
+    public const int restart = 16;
+    public const int stopWatching = 17;
+    public const int exit = 18;
+    public const int move = 20;
+    public const int dscnt = 21;
+    public const int room = 22;
+    public const int reg = 23;
+    public const int logIn = 24;
     public const string FeelTheListOfReplays = "25";
-    public const string CleanTheListOfReplays = "26";
+    public const int RequestForReplay = 26;
 }
 
 
@@ -83,7 +85,6 @@ public class NetworkedServer : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-
         int recHostID;
         int recConnectionID;
         int recChannelID;
@@ -313,12 +314,44 @@ public class NetworkedServer : MonoBehaviour
                     }
                     break;
 
+                case Ident.RequestForReplay:
+                    List<string> templist = new List<string>();
+                    if (splitter.Length > 1 && File.Exists(splitter[1]))
+                    {
+                        var sr = new StreamReader(splitter[1]);
+                        string line1 = "";
+                        while ((line1 = sr.ReadLine()) != null)
+                        {
+                            if (!(templist.Contains(line1)))
+                                templist.Add(line1);
+                        }
+                        sr.Close();
+                    }
+                    StartCoroutine(SendReplay(1.5f, templist, id));
+                    
+                    break;
+
 
                 default:
                     break;
             }
         }
         
+    }
+   IEnumerator SendReplay(float delay,List<string> tempListt,int _id)
+    {
+        yield return new WaitForSeconds(delay);
+        if (tempListt.Count > 0)
+        {
+            SendMessageToClient(Ident.RequestForReplay.ToString() + ',' + tempListt[0], _id);
+            tempListt.RemoveAt(0);
+           
+            StartCoroutine(SendReplay(delay, tempListt, _id));
+            if (tempListt.Count == 0)
+            {
+                SendMessageToClient(Ident.RequestForReplay.ToString() + ',' + "obsExit", _id);
+            }
+        }
     }
     void SetPlayerForRoom(int id, int playerNumber, Room _room)
     {
@@ -334,7 +367,7 @@ public class NetworkedServer : MonoBehaviour
 
     void UpdatePlayersListOfReplays(string playerLogin,int playerID)
     {
-        SendMessageToClient(Ident.CleanTheListOfReplays, playerID);
+        SendMessageToClient(Ident.FeelTheListOfReplays + ',' + "clean", playerID);
 
         if(File.Exists(playerLogin + ".txt"))
         {
@@ -345,24 +378,29 @@ public class NetworkedServer : MonoBehaviour
             {
                 SendMessageToClient(Ident.FeelTheListOfReplays + ',' + line, playerID);
             }
-
+            SendMessageToClient(Ident.FeelTheListOfReplays + ',' + "done", playerID);
             sr.Close();
+
         }
  
     }
 
     void RoomRemove()
     {
-        for (int i = 0; i < rooms.Count; i++)
+        if(rooms.Count > 0)
         {
-            if (rooms[i].id1 == 0 && rooms[i].id2 == 0)
+            for (int i = 0; i < rooms.Count; i++)
             {
-                Destroy(rooms[i].gameObject);
-                rooms.RemoveAt(i);
-                i--;
-                break;
+                if (rooms[i].id1 == 0 && rooms[i].id2 == 0)
+                {
+                    Destroy(rooms[i].gameObject);
+                    rooms.RemoveAt(i);
+                    i--;
+                    break;
+                }
             }
         }
+       
     }
 
 
