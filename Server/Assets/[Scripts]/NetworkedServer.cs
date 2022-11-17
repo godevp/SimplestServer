@@ -35,7 +35,7 @@ public struct Ident
     public const int room = 22;
     public const int reg = 23;
     public const int logIn = 24;
-    public const string FeelTheListOfReplays = "25";
+    public const int FeelTheListOfReplays = 25;
     public const int RequestForReplay = 26;
 }
 
@@ -349,6 +349,18 @@ public class NetworkedServer : MonoBehaviour
                         StartCoroutine(SendReplay(1.5f, templist, id));
                     break;
 
+                case Ident.FeelTheListOfReplays:
+                    foreach(string x in activeAccounts)
+                    {
+                        string[] spl = x.Split(',');
+                        if (spl[1] == id.ToString())
+                        {
+                            UpdatePlayersListOfReplays(spl[0], id);
+                            break;
+                        }
+                    }
+                   
+                    break;
 
                 default:
                     break;
@@ -391,9 +403,9 @@ public class NetworkedServer : MonoBehaviour
         }
     }
 
-    void UpdatePlayersListOfReplays(string playerLogin,int playerID)
+    public void UpdatePlayersListOfReplays(string playerLogin,int playerID)
     {
-        SendMessageToClient(Ident.FeelTheListOfReplays + ',' + "clean", playerID);
+        SendMessageToClient(Ident.FeelTheListOfReplays.ToString() + ',' + "clean", playerID);
 
         if(File.Exists(playerLogin + ".txt"))
         {
@@ -402,9 +414,9 @@ public class NetworkedServer : MonoBehaviour
             string line = "";
             while((line = sr.ReadLine())!= null)
             {
-                SendMessageToClient(Ident.FeelTheListOfReplays + ',' + line, playerID);
+                SendMessageToClient(Ident.FeelTheListOfReplays.ToString() + ',' + line, playerID);
             }
-            SendMessageToClient(Ident.FeelTheListOfReplays + ',' + "done", playerID);
+            SendMessageToClient(Ident.FeelTheListOfReplays.ToString() + ',' + "done", playerID);
             sr.Close();
 
         }
