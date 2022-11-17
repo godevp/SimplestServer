@@ -345,8 +345,8 @@ public class NetworkedServer : MonoBehaviour
                         }
                         sr.Close();
                     }
-                    StartCoroutine(SendReplay(1.5f, templist, id));
-                    
+                   
+                        StartCoroutine(SendReplay(1.5f, templist, id));
                     break;
 
 
@@ -359,7 +359,14 @@ public class NetworkedServer : MonoBehaviour
    IEnumerator SendReplay(float delay,List<string> tempListt,int _id)
     {
         yield return new WaitForSeconds(delay);
-        if (tempListt.Count > 0)
+        
+        List<string> tempList2 = new List<string>();
+        foreach (string acc in activeAccounts)
+        {
+            string[] sp = acc.Split(',');
+            tempList2.Add(sp[1]);
+        }
+        if (tempListt.Count > 0 && tempList2.Contains(_id.ToString()))
         {
             SendMessageToClient(Ident.RequestForReplay.ToString() + ',' + tempListt[0], _id);
             tempListt.RemoveAt(0);
@@ -370,6 +377,7 @@ public class NetworkedServer : MonoBehaviour
                 SendMessageToClient(Ident.RequestForReplay.ToString() + ',' + "obsExit", _id);
             }
         }
+       
     }
     void SetPlayerForRoom(int id, int playerNumber, Room _room)
     {
