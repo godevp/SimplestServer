@@ -666,6 +666,7 @@ GameObject:
   m_Component:
   - component: {fileID: 679830061}
   - component: {fileID: 679830060}
+  - component: {fileID: 679830062}
   m_Layer: 0
   m_Name: NetworkedServerComp
   m_TagString: Untagged
@@ -705,6 +706,23 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &679830062
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 679830059}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8f475abe59ae9c14792aba691f0e0747, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  activeAccounts: []
+  savedAccounts: []
+  rooms: []
+  prefabRoom: {fileID: 8023218127515489263, guid: 2b62fbe90b8c5b5429a87ae0df8fc628, type: 3}
+  GridForRooms: {fileID: 989579125}
 --- !u!1 &705507993
 GameObject:
   m_ObjectHideFlags: 0

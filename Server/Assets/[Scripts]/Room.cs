@@ -38,7 +38,10 @@ public class Room : MonoBehaviour
        
     }
 
-   
+    static public void SendMessageToClient(string msg, int clientConnectionID)
+    {
+        NetworkedServer.instance.SendMessageToClient(msg, clientConnectionID);
+    }
 
     public void SetAccounts(string accountName, int idNumber)
     {
@@ -94,8 +97,8 @@ public class Room : MonoBehaviour
                 slotsByPlayer[slotNumber - 1] = xPlayer;
                 slotsTaken[slotNumber - 1] = true;
                 MovesSaver(xPlayer, slotNumber);
-                NetworkedServer.instance.SendMessageToClient(Ident.PlayerUpdateX + ',' + (slotNumber - 1).ToString(), xPlayer); //that he need to set the buttonSprite to X
-                NetworkedServer.instance.SendMessageToClient(Ident.PlayerUpdateX + ',' + (slotNumber - 1).ToString(), oPlayer);//that he need to set the buttonSprite to X
+                SendMessageToClient(ServerToClientSignifiers.PlayerUpdateX.ToString() + ',' + (slotNumber - 1).ToString(), xPlayer); //that he need to set the buttonSprite to X
+                SendMessageToClient(ServerToClientSignifiers.PlayerUpdateX.ToString() + ',' + (slotNumber - 1).ToString(), oPlayer);//that he need to set the buttonSprite to X
                 UpdateObserver();
 
             }
@@ -104,8 +107,8 @@ public class Room : MonoBehaviour
                 slotsByPlayer[slotNumber - 1] = oPlayer;
                 slotsTaken[slotNumber - 1] = true;
                 MovesSaver(oPlayer, slotNumber);
-                NetworkedServer.instance.SendMessageToClient(Ident.PlayerUpdateO + ',' + (slotNumber - 1).ToString(), xPlayer); //that he need to set the buttonSprite to O
-                NetworkedServer.instance.SendMessageToClient(Ident.PlayerUpdateO + ',' + (slotNumber - 1).ToString(), oPlayer);//that he need to set the buttonSprite to O
+                SendMessageToClient(ServerToClientSignifiers.PlayerUpdateO.ToString() + ',' + (slotNumber - 1).ToString(), xPlayer); //that he need to set the buttonSprite to O
+                SendMessageToClient(ServerToClientSignifiers.PlayerUpdateO.ToString() + ',' + (slotNumber - 1).ToString(), oPlayer);//that he need to set the buttonSprite to O
                 UpdateObserver();
             }
 
@@ -119,8 +122,8 @@ public class Room : MonoBehaviour
                   (slotsByPlayer[0] == xPlayer && slotsByPlayer[4] == xPlayer && slotsByPlayer[8] == xPlayer))
             {
                 //send xplayer winner and oplayer loser
-                NetworkedServer.instance.SendMessageToClient(Ident.winner,xPlayer);
-                NetworkedServer.instance.SendMessageToClient(Ident.loser, oPlayer);
+                SendMessageToClient(ServerToClientSignifiers.winner.ToString(),xPlayer);
+                SendMessageToClient(ServerToClientSignifiers.loser.ToString(), oPlayer);
                 gameOver = true;
 
                 //need to save the game to file
@@ -137,8 +140,8 @@ public class Room : MonoBehaviour
                   (slotsByPlayer[0] == oPlayer && slotsByPlayer[4] == oPlayer && slotsByPlayer[8] == oPlayer))
             {
                 //send oPlayer winner and xplayer loser
-                NetworkedServer.instance.SendMessageToClient(Ident.winner, oPlayer);
-                NetworkedServer.instance.SendMessageToClient(Ident.loser, xPlayer);
+                SendMessageToClient(ServerToClientSignifiers.winner.ToString(), oPlayer);
+                SendMessageToClient(ServerToClientSignifiers.loser.ToString(), xPlayer);
                 gameOver = true;
                 //need to save the game to file
                 SaveTheFileForAcc(account1File , account1Names);
@@ -158,8 +161,8 @@ public class Room : MonoBehaviour
                 }
                 if (allTaken)
                 {
-                    NetworkedServer.instance.SendMessageToClient(Ident.tie, oPlayer);
-                    NetworkedServer.instance.SendMessageToClient(Ident.tie, xPlayer);
+                    SendMessageToClient(ServerToClientSignifiers.tie.ToString(), oPlayer);
+                    SendMessageToClient(ServerToClientSignifiers.tie.ToString(), xPlayer);
                     //need to save the game to file
                     SaveTheFileForAcc(account1File, account1Names);
                     SaveTheFileForAcc(account2File, account2Names);
@@ -190,8 +193,6 @@ public class Room : MonoBehaviour
             sw.WriteLine(g);
         }
         sw.Close();
-       // whoMoved.Clear();
-        //whereMoved.Clear();
     }
 
 
@@ -203,15 +204,15 @@ public class Room : MonoBehaviour
         {
             xPlayer = id1;
             oPlayer = id2;
-            NetworkedServer.instance.SendMessageToClient(Ident.turn1, id1);
-            NetworkedServer.instance.SendMessageToClient(Ident.turn2, id2);
+            SendMessageToClient(ServerToClientSignifiers.turn1.ToString(), id1);
+            SendMessageToClient(ServerToClientSignifiers.turn2.ToString(), id2);
         }
         else
         {
             xPlayer = id2;
             oPlayer = id1;
-            NetworkedServer.instance.SendMessageToClient(Ident.turn2, id1);
-            NetworkedServer.instance.SendMessageToClient(Ident.turn1, id2);
+            SendMessageToClient(ServerToClientSignifiers.turn2.ToString(), id1);
+            SendMessageToClient(ServerToClientSignifiers.turn1.ToString(), id2);
         }
     }
 
@@ -227,10 +228,10 @@ public class Room : MonoBehaviour
             slotsTaken[i] = false;
             slotsByPlayer[i] = 0;
         }
-        NetworkedServer.instance.SendMessageToClient(Ident.restart.ToString(), id1);
-        NetworkedServer.instance.SendMessageToClient(Ident.restart.ToString(), id2);
+        SendMessageToClient(ServerToClientSignifiers.restart.ToString(), id1);
+        SendMessageToClient(ServerToClientSignifiers.restart.ToString(), id2);
         foreach (var obs in spectatorsList)
-        { NetworkedServer.instance.SendMessageToClient(Ident.restart.ToString(), obs); }
+        { SendMessageToClient(ServerToClientSignifiers.restart.ToString(), obs); }
             setRandomPlayer();
         
     }
@@ -242,11 +243,11 @@ public class Room : MonoBehaviour
             {
                 if (slotsByPlayer[i] == xPlayer)
                 {
-                    NetworkedServer.instance.SendMessageToClient(Ident.ObsUpdateX + ',' + i.ToString(), obs);
+                    SendMessageToClient(ServerToClientSignifiers.ObsUpdateX.ToString() + ',' + i.ToString(), obs);
                 }
                 else if (slotsByPlayer[i] == oPlayer)
                 {
-                    NetworkedServer.instance.SendMessageToClient(Ident.ObsUpdateO + ',' + i.ToString(), obs);
+                    SendMessageToClient(ServerToClientSignifiers.ObsUpdateO.ToString() + ',' + i.ToString(), obs);
                 }
                 
             }
